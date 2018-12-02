@@ -66,6 +66,8 @@ $(document).ready( function() {
     fbTrainSchedule.ref().on( "child_added", function( snapshot ) {
 
         //get values from snapshot
+        var id = snapshot.key;
+        console.log(id);
         var name = snapshot.val().name;
         var dest = snapshot.val().destination;
         var first = snapshot.val().first;
@@ -78,16 +80,39 @@ $(document).ready( function() {
         var minAway = moment( na, 'HH:mm' ).diff( moment(), 'minutes') + 1;
 
         //add data to the table
-        var row = $('<tr>').appendTo( $( bodyTableId ) );
+        var row = $('<tr train-Id="'+snapshot.key+'">').appendTo( $( bodyTableId ) );
         $('<td>').text( name ).appendTo( row );
         $('<td>').text( dest ).appendTo( row );
         $('<td>').text( freq ).appendTo( row );
         $('<td>').text( nextArr ).appendTo( row );
-        $('<td id="col-icon">').html( '<span>' + minAway + '</span> <i class="fas fa-trash"></i>' )
+        $('<td>').html( '<span>' + minAway + '</span> <i class="fas fa-trash" data-key="'+snapshot.key+'"></i>' )
                                .appendTo( row );
         $('.fas').css({"visibility":"visible", "float":"right", "cursor":"pointer"});
 
+        //register an event handler for deleting items
+        $('.fa-trash').on('click', delBtnClicked);
+
     } );
+
+    
+
+    function delBtnClicked(e) {
+        e.stopPropagation();
+
+        const trainId = e.target.getAttribute('data-key');
+
+        //console.log('Del button clicked on data ' + trainId);
+
+        //const trainRef = fbTrainSchedule.ref().child( trainId );
+        const trainRef = fbTrainSchedule.ref( trainId );
+
+        trainRef.remove();
+
+        trainRef.on("value", function(snapshot) {
+            $('tr[train-Id="'+snapshot.key+'"]').remove();
+        });
+
+    }
 
 } );
  
